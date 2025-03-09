@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    [(${header})]
+</head>
+<body>
+[(${bodyTop})]
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <h2 class="text-center" th:text="#{login.title}">Login</h2>
+            <div class="text-center mt-3">
+                <a href="/oauth2/authorization/google" class="btn btn-outline-dark btn-block">
+                    <img src="https://www.google.com/favicon.ico" alt="Google Logo" style="height: 20px; margin-right: 10px;">
+                    Login with Google
+                </a>
+                <div>
+                    <p class="text-center mx-3 mb-0" th:text="#{login.or.enter}">or enter with</p>
+                </div>
+            </div>
+            <form th:action="@{/login}" method="post">
+                <div th:if="${param.error}" class="alert alert-danger" th:text="#{login.error}">
+                    Invalid username or password.
+                </div>
+                <div th:if="${param.logout}" class="alert alert-success" th:text="#{login.logout}">
+                    You have been logged out.
+                </div>
+                <div th:if="${message}" class="alert alert-success" th:text="${message}">
+                    Message
+                </div>
+                <div class="form-group">
+                    <label for="username" th:text="#{login.username.or.email}">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" th:text="#{login.password}">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block" th:text="#{login.button}">Login</button>
+                </div>
+                <div class="text-center mt-3">
+                    <span th:text="#{login.no.account}">Don't have an account?</span>
+                    <a th:href="@{/register}" th:text="#{login.register}">Register</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+[(${bodyBottom})]
+</body>
+</html>

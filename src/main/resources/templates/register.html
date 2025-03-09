@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    [(${header})]
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        .password-mismatch, .password-requirements {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .password-strength-meter {
+            height: 5px;
+            background-color: #eee;
+            margin-top: 5px;
+            border-radius: 3px;
+        }
+        .password-strength-meter div {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease-in-out;
+        }
+        .strength-weak { background-color: #dc3545; }
+        .strength-medium { background-color: #ffc107; }
+        .strength-strong { background-color: #28a745; }
+        .requirement-met {
+            color: #28a745;
+        }
+        .requirement-unmet {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+[(${bodyTop})]
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+
+            <h2 class="text-center" th:text="#{register.title}">Registration</h2>
+            <form th:action="@{/register}" method="post">
+                <div class="form-group">
+                    <label for="username" th:text="#{register.username}">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" th:text="#{register.email}">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" th:text="#{register.password}">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required 
+                           onkeyup="checkPasswordStrength()" onchange="checkPasswords()">
+                    <div class="password-strength-meter">
+                        <div id="strengthMeter"></div>
+                    </div>
+                    <div class="password-requirements" id="passwordRequirements">
+                        <div id="lengthReq" th:text="#{register.password.length}">At least 8 characters</div>
+                        <div id="uppercaseReq" th:text="#{register.password.uppercase}">At least one uppercase letter</div>
+                        <div id="lowercaseReq" th:text="#{register.password.lowercase}">At least one lowercase letter</div>
+                        <div id="numberReq" th:text="#{register.password.number}">At least one number</div>
+                        <div id="specialReq" th:text="#{register.password.special}">At least one special character</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword" th:text="#{register.confirm.password}">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required onchange="checkPasswords()">
+                    <div id="passwordMismatch" class="password-mismatch" th:text="#{register.password.mismatch}">Passwords do not match</div>
+                </div>
+                <div class="form-group">
+                    <div class="g-recaptcha mb-3" th:attr="data-sitekey=${recaptchaSiteKey}"></div>
+                    <div th:if="${captchaError}" class="alert alert-danger" th:text="#{register.captcha.error}">
+                        Please verify that you are not a robot.
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block" th:text="#{register.button}">Register</button>
+                </div>
+            </form>
+            <div th:if="${message}" class="alert alert-success" th:text="#{message}">
+                Message
+            </div>
+            <div th:if="${message}" class="alert alert-success mt-3" th:text="#{register.success}"></div>
+        </div>
+    </div>
+</div>
+[(${bodyBottom})]
+<script>
+function checkPasswordStrength() {
+    const password = document.getElementById('password').value;
+    const requirements = document.getElementById('passwordRequirements');
+    const strengthMeter = document.getElementById('strengthMeter');
+    
+    // Show requirements when user starts typing
+    requirements.style.display = password ? 'block' : 'none';
+    
+    // Check each requirement
+    const hasLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    // Update requirement indicators
+    updateRequirement('lengthReq', hasLength);
+    updateRequirement('uppercaseReq', hasUpper);
+    updateRequirement('lowercaseReq', hasLower);
+    updateRequirement('numberReq', hasNumber);
+    updateRequirement('specialReq', hasSpecial);
+    
+    // Calculate strength
+    const requirements_met = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+    let strength = 0;
+    let strengthClass = '';
+    
+    if (password.length > 0) {
+        strength = (requirements_met / 5) * 100;
+        if (strength <= 40) strengthClass = 'strength-weak';
+        else if (strength <= 80) strengthClass = 'strength-medium';
+        else strengthClass = 'strength-strong';
+    }
+    
+    // Update strength meter
+    strengthMeter.style.width = strength + '%';
+    strengthMeter.className = strengthClass;
+    
+    // Update form validity
+    const passwordInput = document.getElementById('password');
+    if (password.length > 0 && requirements_met < 5) {
+        passwordInput.setCustomValidity('Please meet all password requirements');
+    } else {
+        passwordInput.setCustomValidity('');
+    }
+    
+    // Recheck password match if confirm password has value
+    if (document.getElementById('confirmPassword').value) {
+        checkPasswords();
+    }
+}
+
+function updateRequirement(reqId, isMet) {
+    const req = document.getElementById(reqId);
+    req.className = isMet ? 'requirement-met' : 'requirement-unmet';
+}
+
+function checkPasswords() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const mismatchDiv = document.getElementById('passwordMismatch');
+    const submitButton = document.querySelector('button[type="submit"]');
+
+    if (password.value && confirmPassword.value) {
+        if (password.value !== confirmPassword.value) {
+            mismatchDiv.style.display = 'block';
+            confirmPassword.setCustomValidity('Passwords do not match');
+            submitButton.disabled = true;
+        } else {
+            mismatchDiv.style.display = 'none';
+            confirmPassword.setCustomValidity('');
+            submitButton.disabled = false;
+        }
+    } else {
+        mismatchDiv.style.display = 'none';
+        confirmPassword.setCustomValidity('');
+        submitButton.disabled = false;
+    }
+}
+</script>
+</body>
+</html>
