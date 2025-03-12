@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @Entity
+@Table(name = "user")
 public class User {
 
     final public static String ROLE_USER = "USER";

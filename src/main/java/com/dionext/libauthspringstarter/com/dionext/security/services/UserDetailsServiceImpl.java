@@ -2,7 +2,7 @@ package com.dionext.libauthspringstarter.com.dionext.security.services;
 
 import com.dionext.libauthspringstarter.com.dionext.security.entity.User;
 import com.dionext.libauthspringstarter.com.dionext.security.repositories.UserRepository;
-import com.dionext.libauthspringstarter.com.dionext.security.models.ConfirmationToken;
+import com.dionext.libauthspringstarter.com.dionext.security.entity.ConfirmationToken;
 import com.dionext.libauthspringstarter.com.dionext.security.repositories.ConfirmationTokenRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,7 +123,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             token,
             LocalDateTime.now(),
             LocalDateTime.now().plusHours(24),
-            user
+            user.getId()
         );
         
         confirmationTokenRepository.save(confirmationToken);
@@ -153,9 +153,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         confirmationToken.setConfirmedAt(LocalDateTime.now());
         confirmationTokenRepository.save(confirmationToken);
 
-        User user = confirmationToken.getUser();
-        user.setEnabled(true);
-        userRepository.save(user);
+        User user = userRepository.findById(confirmationToken.getUserId()).orElse(null);
+        if (user != null) {
+            user.setEnabled(true);
+            userRepository.save(user);
+        }
     }
 }
 

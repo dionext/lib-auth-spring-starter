@@ -27,11 +27,16 @@ public class LoginController {
         pageCreatorService.prepareTemplateModel(model);
         return "login"; // Return the login.html template
     }
+    @GetMapping("/start")
+    public String start(Model model) {
+        pageCreatorService.prepareTemplateModel(model);
+        return "start";
+    }
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         pageCreatorService.prepareTemplateModel(model);
-        return "register"; // Отображение страницы регистрации
+        return "register";
     }
 
     @PostMapping("/register")
